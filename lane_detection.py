@@ -22,6 +22,10 @@ WHITE_LANE_HSV_UPPER = np.array([179, 50, 255])
 YELLOW_LANE_HSV_LOWER = np.array([15, 40, 120])
 YELLOW_LANE_HSV_UPPER = np.array([35, 255, 255])
 
+# 슬라이딩 윈도우 설정
+WINDOW_HEIGHT = 40  # 윈도우 높이
+WINDOW_MARGIN = 50  # 윈도우 좌우 마진
+
 # 이전 프레임의 차선 좌표 저장용
 previous_left_lane_x_coords = []
 previous_right_lane_x_coords = []
@@ -104,7 +108,7 @@ def process_lane_detection(image):
     while current_y > 0:
         # 좌측 차선 검출 영역 설정
         left_window = lane_mask[
-            current_y - 40 : current_y, left_lane_base_x - 50 : left_lane_base_x + 50
+            current_y - WINDOW_HEIGHT : current_y, left_lane_base_x - WINDOW_MARGIN : left_lane_base_x + WINDOW_MARGIN
         ]
         left_contours, _ = cv2.findContours(
             left_window, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
@@ -115,12 +119,12 @@ def process_lane_detection(image):
             if moments["m00"] != 0:
                 centroid_x = int(moments["m10"] / moments["m00"])
                 centroid_y = int(moments["m01"] / moments["m00"])
-                left_lane_x_coords.append(left_lane_base_x - 50 + centroid_x)
-                left_lane_base_x = left_lane_base_x - 50 + centroid_x
+                left_lane_x_coords.append(left_lane_base_x - WINDOW_MARGIN + centroid_x)
+                left_lane_base_x = left_lane_base_x - WINDOW_MARGIN + centroid_x
 
         # 우측 차선 검출 영역 설정
         right_window = lane_mask[
-            current_y - 40 : current_y, right_lane_base_x - 50 : right_lane_base_x + 50
+            current_y - WINDOW_HEIGHT : current_y, right_lane_base_x - WINDOW_MARGIN : right_lane_base_x + WINDOW_MARGIN
         ]
         right_contours, _ = cv2.findContours(
             right_window, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
@@ -131,25 +135,25 @@ def process_lane_detection(image):
             if moments["m00"] != 0:
                 centroid_x = int(moments["m10"] / moments["m00"])
                 centroid_y = int(moments["m01"] / moments["m00"])
-                right_lane_x_coords.append(right_lane_base_x - 50 + centroid_x)
-                right_lane_base_x = right_lane_base_x - 50 + centroid_x
+                right_lane_x_coords.append(right_lane_base_x - WINDOW_MARGIN + centroid_x)
+                right_lane_base_x = right_lane_base_x - WINDOW_MARGIN + centroid_x
 
         # 슬라이딩 윈도우 사각형 그리기
         cv2.rectangle(
             sliding_window_mask,
-            (left_lane_base_x - 50, current_y),
-            (left_lane_base_x + 50, current_y - 40),
+            (left_lane_base_x - WINDOW_MARGIN, current_y),
+            (left_lane_base_x + WINDOW_MARGIN, current_y - WINDOW_HEIGHT),
             (255, 255, 255),
             2,
         )
         cv2.rectangle(
             sliding_window_mask,
-            (right_lane_base_x - 50, current_y),
-            (right_lane_base_x + 50, current_y - 40),
+            (right_lane_base_x - WINDOW_MARGIN, current_y),
+            (right_lane_base_x + WINDOW_MARGIN, current_y - WINDOW_HEIGHT),
             (255, 255, 255),
             2,
         )
-        current_y -= 40
+        current_y -= WINDOW_HEIGHT
 
     # 차선이 검출되지 않은 경우 이전 프레임 데이터 사용
     if len(left_lane_x_coords) == 0:
